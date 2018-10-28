@@ -18,4 +18,5 @@ T.B.D.
 
 This product is subject to LGPL v. 3.0 license described in the following link.
 
-[/LICENSE](LICENSE FILE)
+
+[LICENSE FILE](/LICENSE "LICENSE FILE")
