@@ -1,3 +1,5 @@
+<p align="left" style="width: 100%"><img src="https://travis-ci.org/hellgate75/standalone-container.svg?branch=master" />&nbsp;&nbsp;<a href="https://travis-ci.org/hellgate75/standalone-container">Build Status</a></p>
+
 # StanAlone Container
 
 ## Objectives
