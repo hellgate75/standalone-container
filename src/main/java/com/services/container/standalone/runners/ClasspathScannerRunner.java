@@ -40,6 +40,18 @@ public class ClasspathScannerRunner extends Runner {
 	@Override
 	public void execute() throws RunnerExecutionException {
 		this.checkIn();
+		StandAloneContainer container = null;
+		while (container == null ) {
+			try {
+				container = StandAloneContainer.get();
+			} catch (Exception e) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+				}
+			}
+			EngineUtilities.log(LOG, LogLevel.VERBOSE, "Waiting for engine and/or scanning to be completed ...");
+		}
 		Collection<EntityDescriptor> descriptors = DIBeanRegistry.get().getDescriptors();
 		List<String> beans = descriptors.stream().map( d -> d.getEntityName() ).collect(Collectors.toList());
 		EngineUtilities.log(LOG, LogLevel.INFO, "Lookup completed - Found Beans : {}", beans.toString());

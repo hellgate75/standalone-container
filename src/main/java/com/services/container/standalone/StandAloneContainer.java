@@ -14,6 +14,7 @@ import com.services.container.standalone.exceptions.InvalidBeanInstanceException
 import com.services.container.standalone.exceptions.StandAloneContainerAlreadyRunningException;
 import com.services.container.standalone.factories.FactoryHelper;
 import com.services.container.standalone.runners.ClasspathScannerRunner;
+import com.services.container.standalone.runners.ProxyInstanceRunner;
 import com.services.container.standalone.utils.AnnotationUtils;
 import com.services.container.standalone.utils.EngineUtilities;
 import com.services.container.standalone.utils.LogLevel;
@@ -28,6 +29,8 @@ public class StandAloneContainer {
 	private static StandAloneContainer instance=null;
 	protected static boolean loadedPackages=false;
 	private ClasspathScannerRunner runner = new ClasspathScannerRunner();
+	private ProxyInstanceRunner instanceRunner = null;
+	protected static boolean createdProxyInstance = true;
 	
 	/**
 	 * Protected Default constructor
@@ -36,16 +39,37 @@ public class StandAloneContainer {
 		super();
 		reset();
 		/* Load asynchronously beans from the class-path */
-/*		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				DIBeanRegistry.get();
-				ready();
-			}
-		}).start();
-*/
 		runner.start();
+	}
+	
+	/**
+	 * Instance related constructor
+	 * @param target instance object to be proxied ...
+	 */
+	public StandAloneContainer(Object target) {
+		this();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			EngineUtilities.log(LOG, LogLevel.WARN, "Interrupted Excetion in wait for Engine start", e);
+		}
+		createdProxyInstance = false;
+		instanceRunner = new ProxyInstanceRunner(target);
+		instanceRunner.start();
+	}
+
+	/**
+	 * Execute Default Container operations proxying the main class
+	 * @param target Target class to be proxied
+	 * @param arguments arguments used to bootstrap the container
+	 * @throws StandAloneContainerAlreadyRunningException Exception that occurs during container start up
+	 */
+	public static void run(Object target, String[] arguments) throws StandAloneContainerAlreadyRunningException {
+		if (instance!=null) {
+			throw new StandAloneContainerAlreadyRunningException("You cannot run the container multiple times");
+		}
+		EngineUtilities.log(LOG, LogLevel.WARN, "Arguments: {}", Arrays.toString(arguments));
+		instance = new StandAloneContainer(target);
 	}
 	
 	/**
@@ -59,6 +83,15 @@ public class StandAloneContainer {
 		}
 		EngineUtilities.log(LOG, LogLevel.WARN, "Arguments: {}", Arrays.toString(arguments));
 		instance = new StandAloneContainer();
+	}
+	
+	/**
+	 * Execute Default Container operations, proxying the main class
+	 * @param target Target class to be proxied
+	 * @throws StandAloneContainerAlreadyRunningException Exception that occurs during container start up
+	 */
+	public static void run(Object target) throws StandAloneContainerAlreadyRunningException {
+		run(target, new String[0]);
 	}
 	
 	/**
@@ -153,10 +186,25 @@ public class StandAloneContainer {
 	}
 	
 	/**
+	 * Retrieve ready state of the engine
+	 * @return ready state
+	 */
+	public static boolean isReady() {
+		return loadedPackages;
+	}
+	
+	/**
+	 * Enable ready state of the class object proxy
+	 */
+	public static void created() {
+		createdProxyInstance = true;
+	}
+	
+	/**
 	 * Method that stay in wait for the engine to load all entities and starts services
 	 */
 	public static void waitForReadyState() {
-		while ( ! loadedPackages || FactoryHelper.isCreationForAllFactoryAnnotationsRunning() ) {
+		while ( ! loadedPackages || ! createdProxyInstance || FactoryHelper.isCreationForAllFactoryAnnotationsRunning() ) {
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {

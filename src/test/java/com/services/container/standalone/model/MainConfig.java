@@ -11,6 +11,9 @@ import com.services.container.standalone.annotations.Configuration;
  */
 @Configuration(packages={"com.services.container.standalone.model"},
                urls={"file://./class"})
-public class SampleConfig {
+public class MainConfig {
 
+	public static final void main(String[] args) {
+		
+	}
 }

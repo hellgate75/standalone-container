@@ -129,5 +129,18 @@ public class TestCases {
 		assertNotNull("Sample Business class must containes value for Wired field", obj.getSampleService());
 	}
 	
+	@Test(timeout=17500)
+	public void test11AutoProxyIntoContainerByMainInstance() throws StandAloneContainerAlreadyRunningException, InterruptedException, InvalidBeanInstanceException, HandlerInvocationException {
+		StandAloneContainer.reset();
+		BusinessClass business = new BusinessClass();
+		StandAloneContainer.run(business);
+		//Stay waiting for all entityies and services are loaded in the service
+		StandAloneContainer.waitForReadyState();
+		int foundAnnotations = StandAloneContainer.get().getEntityRegistry().getDescriptors().size();
+		assertEquals("Registry must contain 8 entities", 8, foundAnnotations);
+		assertNotNull("Sample Business class must containes value for Autowired field", business.getSampleBean());
+		assertNotNull("Sample Business class must containes value for Wired field", business.getSampleService());
+	}
+	
 	
 }
